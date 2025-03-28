@@ -44,3 +44,6 @@ data/raw/google/
 *.rar
 output/toy.2016SB5/5.arb_Arab/
 .env
+
+# TODO fix later to individually ignore each model file that's too large
+experiments/*/*/5
