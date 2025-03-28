@@ -4,13 +4,16 @@ seed = 0
 random.seed(seed)
 ncore = multiprocessing.cpu_count()
 
-def to_range(range_str): return range(int(range_str.split(':')[0]), int(range_str.split(':')[2]), int(range_str.split(':')[1]))
+def to_range(range_str): return range(int(range_str.split(':')[0]), int(range_str.split(':')[1]), int(range_str.split(':')[2]))
+
+# Set visible GPU to index 2
+os.environ["CUDA_VISIBLE_DEVICES"] = "2"
 
 settings = {
     'cmd': ['prep', 'train', 'test', 'eval', 'agg'], # steps of pipeline, ['prep', 'train', 'test', 'eval', 'agg']
     'prep': {
         'doctype': 'snt', # 'rvw' # if 'rvw': review => [[review]] else if 'snt': review => [[subreview1], [subreview2], ...]'
-        'langaug': ['', 'pes_Arab', 'zho_Hans', 'deu_Latn', 'arb_Arab', 'fra_Latn', 'spa_Latn'], # [''] for no lang augmentation
+        'langaug': [''], # Disabled language augmentation
         # nllb:  ['', 'pes_Arab', 'zho_Hans', 'deu_Latn', 'arb_Arab', 'fra_Latn', 'spa_Latn'] # list of nllb language keys to augment via backtranslation from https://github.com/facebookresearch/flores/tree/main/flores200#languages-in-flores-200 # pes_Arab (Farsi), 'zho_Hans' for Chinese (Simplified), deu_Latn (Germany), spa_Latn (Spanish), arb_Arab (Modern Standard Arabic), fra_Latn (French), ...
         # googletranslate: ['', 'fa', 'zh-CN', 'de', 'ar', 'fr', 'es']
         'translator': 'nllb',  # googletranslate or nllb
@@ -19,7 +22,7 @@ settings = {
         #https://discuss.pytorch.org/t/using-torch-data-prallel-invalid-device-string/166233
         #gpu card indexes #"cuda:1" if torch.cuda.is_available() else "cpu"
         #cuda:1,2 cannot be used
-        'device': f'cuda:{os.environ["CUDA_VISIBLE_DEVICES"]}' if 'CUDA_VISIBLE_DEVICES' in os.environ.keys() else 'cpu',
+        'device': "cuda:0" if 'CUDA_VISIBLE_DEVICES' in os.environ.keys() else 'cpu',
         'batch': True,
         },
     'train': {
@@ -42,7 +45,7 @@ settings = {
             'model_name_or_path': 'bert-base-uncased',
             'data_dir': '/output/run', # This param will updated dynamically in bert.py
             'task_name': 'lady',
-            'per_gpu_train_batch_size': 16,
+            'per_gpu_train_batch_size': 8,  # Reduced from 16
             'per_gpu_eval_batch_size': 8,
             'learning_rate': 2e-5,
             'do_train': True,
@@ -67,7 +70,7 @@ settings = {
             'local_rank': -1,
             'server_ip': '',
             'server_port': '',
-            'no_cuda': False,
+            'no_cuda': False,  # Changed to False to enable GPU
             'config_name': '',
             'tokenizer_name': '',
             'evaluate_during_training': False,
