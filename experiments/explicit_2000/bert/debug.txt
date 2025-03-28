@@ -1,0 +1,55 @@
+Starting with args: Namespace(am='bert', data='datasets/semeval_explicit_2000.xml', naspects=5, output='experiments/explicit_2000/bert', skip_agg=False)
+Input file: datasets/semeval_explicit_2000.xml
+Loading reviews from datasets/semeval_explicit_2000.xml to experiments/explicit_2000/bert/reviews.pkl
+Loaded 2000 reviews
+Split data into train/test sets
+Created bert model
+Created output directories
+Training fold 0: train=1360, valid=340
+Training fold 1: train=1360, valid=340
+Training fold 2: train=1360, valid=340
+Training fold 3: train=1360, valid=340
+Training fold 4: train=1360, valid=340
+All folds trained successfully
+Starting test loop...
+Testing fold 0...
+Fold 0 testing complete.
+Testing fold 1...
+Fold 1 testing complete.
+Testing fold 2...
+Fold 2 testing complete.
+Testing fold 3...
+Fold 3 testing complete.
+Testing fold 4...
+Fold 4 testing complete.
+Test loop finished.
+Starting evaluate loop...
+Evaluating fold 0...
+  Input pred file: experiments/explicit_2000/bert/5/bert/f0.model.ad.pred.0.0
+  Output eval file: experiments/explicit_2000/bert/5/bert/f0.model.ad.pred.0.0.ad.eval.mean.csv
+Fold 0 evaluation complete.
+Evaluating fold 1...
+  Input pred file: experiments/explicit_2000/bert/5/bert/f1.model.ad.pred.0.0
+  Output eval file: experiments/explicit_2000/bert/5/bert/f1.model.ad.pred.0.0.ad.eval.mean.csv
+Fold 1 evaluation complete.
+Evaluating fold 2...
+  Input pred file: experiments/explicit_2000/bert/5/bert/f2.model.ad.pred.0.0
+  Output eval file: experiments/explicit_2000/bert/5/bert/f2.model.ad.pred.0.0.ad.eval.mean.csv
+Fold 2 evaluation complete.
+Evaluating fold 3...
+  Input pred file: experiments/explicit_2000/bert/5/bert/f3.model.ad.pred.0.0
+  Output eval file: experiments/explicit_2000/bert/5/bert/f3.model.ad.pred.0.0.ad.eval.mean.csv
+Fold 3 evaluation complete.
+Evaluating fold 4...
+  Input pred file: experiments/explicit_2000/bert/5/bert/f4.model.ad.pred.0.0
+  Output eval file: experiments/explicit_2000/bert/5/bert/f4.model.ad.pred.0.0.ad.eval.mean.csv
+Fold 4 evaluation complete.
+Evaluate loop finished.
+Running aggregation on experiments/explicit_2000/bert/5/bert/ (results) and saving to experiments/explicit_2000/bert (output)
+Found 5 CSV files for aggregation:
+  - experiments/explicit_2000/bert/5/bert/f2.model.ad.pred.0.0.ad.eval.mean.csv
+  - experiments/explicit_2000/bert/5/bert/f0.model.ad.pred.0.0.ad.eval.mean.csv
+  - experiments/explicit_2000/bert/5/bert/f3.model.ad.pred.0.0.ad.eval.mean.csv
+  - experiments/explicit_2000/bert/5/bert/f4.model.ad.pred.0.0.ad.eval.mean.csv
+  - experiments/explicit_2000/bert/5/bert/f1.model.ad.pred.0.0.ad.eval.mean.csv
+Aggregation completed successfully

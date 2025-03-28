@@ -1,0 +1,8 @@
+Starting with args: Namespace(am='ctm', data='datasets/semeval_implicit_2000.xml', naspects=5, output='experiments/implicit_2000/ctm', skip_agg=False)
+Input file: datasets/semeval_implicit_2000.xml
+Loading reviews from datasets/semeval_implicit_2000.xml to experiments/implicit_2000/ctm/reviews.pkl
+Loaded 2000 reviews
+Split data into train/test sets
+Created ctm model
+Created output directories
+Training fold 0: train=1360, valid=340

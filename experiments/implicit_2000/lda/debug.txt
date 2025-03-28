@@ -1,0 +1,39 @@
+Starting with args: Namespace(am='lda', data='datasets/semeval_implicit_2000.xml', naspects=5, output='experiments/implicit_2000/lda', skip_agg=False)
+Input file: datasets/semeval_implicit_2000.xml
+Loading reviews from datasets/semeval_implicit_2000.xml to experiments/implicit_2000/lda/reviews.pkl
+Loaded 2000 reviews
+Split data into train/test sets
+Created lda model
+Created output directories
+Training fold 0: train=1360, valid=340
+Training fold 1: train=1360, valid=340
+Training fold 2: train=1360, valid=340
+Training fold 3: train=1360, valid=340
+Training fold 4: train=1360, valid=340
+All folds trained successfully
+Starting test loop...
+Testing fold 0...
+Error during processing: too many values to unpack (expected 3)
+Traceback (most recent call last):
+  File "src/main.py", line 141, in test
+    return pd.read_pickle(f'{output}f{f}.model.{cp_name}.pred.{params.settings["test"]["h_ratio"]}')
+  File "/home/thangk/miniconda3/envs/lady/lib/python3.8/site-packages/pandas/io/pickle.py", line 179, in read_pickle
+    with get_handle(
+  File "/home/thangk/miniconda3/envs/lady/lib/python3.8/site-packages/pandas/io/common.py", line 868, in get_handle
+    handle = open(handle, ioargs.mode)
+FileNotFoundError: [Errno 2] No such file or directory: 'experiments/implicit_2000/lda/5/lda/f0.model.ad.pred.0.0'
+
+During handling of the above exception, another exception occurred:
+
+Traceback (most recent call last):
+  File "src/main.py", line 526, in main
+    test(am=am, test=[reviews[i] for i in splits['test']], f=fold_idx, output=output_dir, capability=model_capability)
+  File "src/main.py", line 147, in test
+    pairs = get_model_infer_method(am, capability)(reviews_test=test, h_ratio=params.settings['test']['h_ratio'], doctype=params.settings['prep']['doctype'], output=f'{output}/f{f}')
+  File "/home/thangk/msc/LADy-main/src/aml/mdl.py", line 87, in infer_batch
+    def infer_batch(self, reviews_test: List[Review], h_ratio: int, doctype: str, output: str) -> BatchPairsType:
+  File "/home/thangk/msc/LADy-main/src/cmn/review.py", line 93, in get_aos
+    r = []
+  File "/home/thangk/msc/LADy-main/src/cmn/review.py", line 93, in <listcomp>
+    r = []
+ValueError: too many values to unpack (expected 3)
