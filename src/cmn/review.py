@@ -1,4 +1,8 @@
-from typing import Any, Optional, Tuple, List, Dict, Literal, Union
+from typing import Any, Optional, Tuple, List, Dict, Union
+try:
+    from typing import Literal  # Python 3.8+
+except ImportError:
+    from typing_extensions import Literal  # Python 3.7 and earlier
 import pandas as pd, numpy as np
 from returns.maybe import Maybe, Nothing, Some
 import pampy

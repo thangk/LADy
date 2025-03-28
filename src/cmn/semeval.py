@@ -1,10 +1,24 @@
 import os
 from tqdm import tqdm
 import xml.etree.ElementTree as et
+import logging
+import sys
 
 #nlp = spacy.load("en_core_web_sm")  # en_core_web_trf for transformer-based; error ==> python -m spacy download en_core_web_sm
 
 from cmn.review import Review
+
+# Set up logging
+debug_log = logging.getLogger('semeval_debug')
+debug_log.setLevel(logging.DEBUG)
+# Add a file handler
+os.makedirs('logs', exist_ok=True)
+fh = logging.FileHandler('logs/semeval_debug.log', mode='w')
+fh.setLevel(logging.DEBUG)
+# Add formatter
+formatter = logging.Formatter('%(asctime)s - %(name)s - %(levelname)s - %(message)s')
+fh.setFormatter(formatter)
+debug_log.addHandler(fh)
 
 class SemEvalReview(Review):
 
@@ -12,6 +26,12 @@ class SemEvalReview(Review):
 
     @staticmethod
     def load(path, explicit=True, implicit=False):
+        debug_log.info(f"SemEvalReview.load called with path={path}, explicit={explicit}, implicit={implicit}")
+        # Auto-detect if this is an implicit dataset based on filename
+        if 'implicit' in path.lower() and not implicit:
+            debug_log.info("Detected implicit dataset from filename, setting implicit=True")
+            implicit = True
+            
         if str(path).endswith('.xml'): return SemEvalReview._xmlloader(path, explicit, implicit)
         return SemEvalReview._txtloader(input)
 
@@ -34,11 +54,22 @@ class SemEvalReview(Review):
     @staticmethod
     def _xmlloader(path, explicit, implicit):
         reviews_list = []
+        debug_log.info(f"Loading XML file from: {path}")
+        debug_log.info(f"explicit={explicit}, implicit={implicit}")
         xtree = et.parse(path).getroot()
-        if xtree.tag == 'Reviews':   reviews = [SemEvalReview._parse(xsentence, explicit, implicit) for xreview in tqdm(xtree) for xsentences in xreview for xsentence in xsentences]
-        if xtree.tag == 'sentences': reviews = [SemEvalReview._parse(xsentence, explicit, implicit) for xsentence in tqdm(xtree)]
+        debug_log.info(f"XML root tag: {xtree.tag}")
+        debug_log.info(f"Number of children: {len(xtree)}")
+        
+        if xtree.tag == 'Reviews':   
+            debug_log.info("Processing 'Reviews' format")
+            reviews = [SemEvalReview._parse(xsentence, explicit, implicit) for xreview in tqdm(xtree) for xsentences in xreview for xsentence in xsentences]
+        if xtree.tag == 'sentences': 
+            debug_log.info("Processing 'sentences' format")
+            reviews = [SemEvalReview._parse(xsentence, explicit, implicit) for xsentence in tqdm(xtree)]
 
-        return [r for r in reviews if r]
+        result = [r for r in reviews if r]
+        debug_log.info(f"Loaded {len(result)} reviews with aspects")
+        return result
 
     @staticmethod
     def _map_idx(aspect, text):
@@ -58,10 +89,14 @@ class SemEvalReview(Review):
     @staticmethod
     def _parse(xsentence, explicit, implicit):
         id = xsentence.attrib["id"]
+        debug_log.info(f"Parsing sentence {id}, explicit={explicit}, implicit={implicit}")
         aos = []; aos_cats = []
         for element in xsentence:
-            if element.tag == 'text': sentence = element.text # we consider each sentence as a signle review
+            if element.tag == 'text': 
+                sentence = element.text # we consider each sentence as a signle review
+                debug_log.info(f"Found text: {sentence[:30]}...")
             elif element.tag == 'Opinions':#semeval-15-16
+                debug_log.info("Found Opinions tag")
                 #<Opinion target="place" category="RESTAURANT#GENERAL" polarity="positive" from="5" to="10"/>
                 for opinion in element:
                     # Load implicit, explicit, or both aspects
@@ -78,6 +113,7 @@ class SemEvalReview(Review):
                 aos = sorted(aos, key=lambda x: int(x[0][0])) #based on start of sentence
 
             elif element.tag == 'aspectTerms':#semeval-14
+                debug_log.info("Found aspectTerms tag")
                 #<aspectTerm term="table" polarity="neutral" from="5" to="10"/>
                 for opinion in element:
                     # Load implicit, explicit, or both aspects
@@ -93,9 +129,20 @@ class SemEvalReview(Review):
                 aos = sorted(aos, key=lambda x: int(x[0][0])) #based on start of sentence
 
             elif element.tag == 'aspectCategories':  # semeval-14
-                for opinion in element:
+                debug_log.info(f"Found aspectCategories tag with {len(element)} categories")
+                for i, opinion in enumerate(element):
                     #<aspectCategory category="food" polarity="neutral"/>
-                    aos_cats.append(opinion.attrib["category"])
+                    category = opinion.attrib["category"]
+                    sentiment = opinion.attrib["polarity"].replace('positive', '+1').replace('negative', '-1').replace('neutral', '0')
+                    debug_log.info(f"  - Category: {category}, Sentiment: {sentiment}")
+                    aos_cats.append(category)
+
+                    # For implicit datasets, create implicit aspects
+                    if implicit:
+                        # Use dummy token indices (will be marked as implicit below)
+                        dummy_aspect = ([i], [], sentiment, 'NULL')  # Use i for index to make them unique
+                        aos.append(dummy_aspect)
+                        debug_log.info(f"    Added implicit aspect for category {category}")
 
         # Mark all aos with implicit aspects
         implicit_arr = [False] * len(aos)
@@ -103,6 +150,10 @@ class SemEvalReview(Review):
             for i, (idxlist, o, s, aspect_token) in enumerate(aos):
                 if aspect_token == 'NULL': implicit_arr[i] = True
 
+        if 'sentence' not in locals():
+            debug_log.error(f"No text element found in sentence {id}")
+            return None
+            
         #sentence = nlp(sentence) # as it does some processing, it destroys the token idx for aspect term
         tokens = sentence.split()
         # to fix ",a b c," to "a b c"
@@ -112,8 +163,10 @@ class SemEvalReview(Review):
             for j, idx in enumerate(idxlist):
                 if not implicit_arr[i]:
                     tokens[idx] = aspect_token.split()[j].replace('"', '')
-                aos[i] = (idxlist, o, s)
+                # Preserve the 4th element (aspect_token) when updating aos
+                aos[i] = (idxlist, o, s, aspect_token)
 
+        debug_log.info(f"Finished parsing sentence {id} with {len(aos)} aspects")
         return Review(id=id, sentences=[[str(t).lower() for t in tokens]], time=None, author=None,
                       aos=[aos], lempos=None,
                       parent=None, lang='eng_Latn', category=aos_cats, implicit=implicit_arr) if aos else None
