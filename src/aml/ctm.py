@@ -83,10 +83,39 @@ class Ctm(AbstractAspectModel):
     def infer_batch(self, reviews_test: List[Review], h_ratio, doctype, output):
         reviews_test_ = []
         reviews_aspects: List[List[List[int]]] = []
+        
+        print(f"Processing {len(reviews_test)} reviews...")
+        
+        # Check if this is an implicit dataset
+        is_implicit = False
+        if reviews_test and hasattr(reviews_test[0], 'implicit'):
+            is_implicit = any(reviews_test[0].implicit)
+            print(f"Detected implicit dataset: {is_implicit}")
+        
         for r in reviews_test:
-            r_aspects = [[w for a, o, s in sent for w in a] for sent in r.get_aos()]  # [['service', 'food'], ['service'], ...]
+            # Extract aspects differently based on whether it's implicit or not
+            if is_implicit:
+                r_aspects = []
+                for i, sent in enumerate(r.aos):
+                    sent_aspects = []
+                    for aos_tuple in sent:
+                        # For implicit datasets, handle tuples with 4+ elements
+                        if len(aos_tuple) >= 4 and aos_tuple[3] != 'NULL':
+                            sent_aspects.append(aos_tuple[3])
+                    r_aspects.append(sent_aspects)
+            else:
+                # Original implementation for explicit datasets
+                r_aspects = []
+                for sent in r.get_aos():
+                    sent_aspects = []
+                    for aos_item in sent:
+                        # Handle tuples with potentially different lengths
+                        if len(aos_item) >= 3:
+                            aspect_ids = aos_item[0]
+                            sent_aspects.extend([w for w in aspect_ids if w is not None])
+                    r_aspects.append(sent_aspects)
 
-            if len(r_aspects[0]) == 0: continue  # ??
+            if len(r_aspects[0]) == 0: continue  # Skip if no aspects
             if random.random() < h_ratio: r_ = r.hide_aspects()
             else: r_ = r
 

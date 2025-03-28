@@ -1,5 +1,9 @@
 import re, numpy as np, pandas as pd, random
-from typing import List, Tuple, TypedDict, Literal
+from typing import List, Tuple
+try:
+    from typing import TypedDict, Literal  # Python 3.8+
+except ImportError:
+    from typing_extensions import TypedDict, Literal  # Python 3.7 and earlier
 import gensim
 from utils import flatten
 
